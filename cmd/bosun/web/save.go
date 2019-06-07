@@ -3,7 +3,9 @@ package web
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
 
 	"bosun.org/cmd/bosun/conf"
 	"github.com/MiniProfiler/go/miniprofiler"
@@ -11,11 +13,12 @@ import (
 
 func SaveConfig(t miniprofiler.Timer, w http.ResponseWriter, r *http.Request) (interface{}, error) {
 	data := struct {
-		Config  string
-		Diff    string
-		User    string
-		Message string
-		Other   []string
+		Filename string
+		Config   string
+		Diff     string
+		User     string
+		Message  string
+		Other    []string
 	}{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&data); err != nil {
@@ -27,8 +30,13 @@ func SaveConfig(t miniprofiler.Timer, w http.ResponseWriter, r *http.Request) (i
 	} else if data.User == "" {
 		data.User = getUsername(r)
 	}
-	err := schedule.RuleConf.SaveRawText(data.Config, data.Diff, data.User, data.Message, data.Other...)
+	backup, err := ioutil.ReadFile(data.Filename)
 	if err != nil {
+		return nil, err
+	}
+	err := schedule.RuleConf.SaveRawText(data.Filename, data.Config, data.Diff, data.User, data.Message, data.Other...)
+	if err != nil {
+		ioutil.WriteFile(data.Filename, []byte(backup), os.FileMode(int(0640)))
 		return nil, err
 	}
 	fmt.Fprint(w, "save successful")

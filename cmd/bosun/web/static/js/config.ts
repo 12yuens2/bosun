@@ -534,24 +534,54 @@ bosunControllers.controller('ConfigCtrl', ['$scope', '$http', '$location', '$rou
 			});
 	}
 
+        function getConfigText() {
+                 var rawText = $scope.config_text.split("\n");
+                 var firstLine = rawText[0];
+
+                 if (firstLine === "### DIRECTORY-BASED ###") {
+                         var files = {};
+                         var fileText = "";
+                         for (var i = 1; i < rawText.length; i++) {
+                                 var line = rawText[i]
+                                 if (line.indexOf("### FROM") >= 0) {
+                                         fileText = "";
+                                 } else if (line.indexOf("### END ") >= 0) {
+                                         var filename = line.substring(8)
+                                         files[filename] = fileText.replace(/\n$/, "");
+                                 } else {
+                                         fileText += line + "\n";
+                                 }
+                         }
+                         return files
+                 } else {
+                         return {"bosun.conf": $scope.config_text};
+                 }
+        }
 
 	$scope.saveConfig = () => {
 		if (!$scope.saveEnabled) {
 			return;
 		}
+                var configs = getConfigText();
 		$scope.saveResult = "Saving; Please Wait"
-		$http.post('/api/config/save', {
-			"Config": $scope.config_text,
-			"Diff": $scope.diff,
-			"Message": $scope.message
-		})
-			.success((data: any) => {
-				$scope.saveResult = "Config Saved; Reloading";
-				$scope.runningHash = undefined;
-			})
-			.error((error) => {
-				$scope.saveResult = error;
-			});
+
+                for (var key in configs) {
+                        var fileText = configs[key];
+
+                        $http.post('/api/config/save', {
+                                "Filename": key,
+                                "Config": fileText,
+                                "Diff": $scope.diff,
+                                "Message": $scope.message
+                        })
+                        .success((data: any) => {
+                                $scope.saveResult = "Config Saved; Reloading";
+                                $scope.runningHash = undefined;
+                        })
+                        .error((error) => {
+                                $scope.saveResult = error;
+                        })
+                }
 	}
 
 	$scope.saveClass = () => {
