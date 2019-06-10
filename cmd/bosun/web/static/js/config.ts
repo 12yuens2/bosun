@@ -9,6 +9,7 @@ interface IConfigScope extends IBosunScope {
 	editor: any;
 	validate: () => void;
 	validationResult: string;
+        saveWarning: string;
 	saveResult: string;
 	selectAlert: (alert: string) => void;
 	reparse: () => void;
@@ -70,7 +71,7 @@ interface IConfigScope extends IBosunScope {
 	getRunningHash: () => void;
 }
 
-bosunControllers.controller('ConfigCtrl', ['$scope', '$http', '$location', '$route', '$timeout', '$sce', function ($scope: IConfigScope, $http: ng.IHttpService, $location: ng.ILocationService, $route: ng.route.IRouteService, $timeout: ng.ITimeoutService, $sce: ng.ISCEService) {
+bosunControllers.controller('ConfigCtrl', ['$q', '$scope', '$http', '$location', '$route', '$timeout', '$sce', function ($q: ng.IQService, $scope: IConfigScope, $http: ng.IHttpService, $location: ng.ILocationService, $route: ng.route.IRouteService, $timeout: ng.ITimeoutService, $sce: ng.ISCEService) {
 	var search = $location.search();
 	$scope.fromDate = search.fromDate || '';
 	$scope.fromTime = search.fromTime || '';
@@ -544,9 +545,14 @@ bosunControllers.controller('ConfigCtrl', ['$scope', '$http', '$location', '$rou
                          for (var i = 1; i < rawText.length; i++) {
                                  var line = rawText[i]
                                  if (line.indexOf("### FROM") >= 0) {
+                                         var fromFilename = line.substring(9)
                                          fileText = "";
                                  } else if (line.indexOf("### END ") >= 0) {
                                          var filename = line.substring(8)
+                                         if (fromFilename !== filename) {
+                                                 $scope.saveWarning = "Config filenames FROM: " + fromFilename +
+                                                 ", END: " + filename + "do not match."
+                                         }
                                          files[filename] = fileText.replace(/\n$/, "");
                                  } else {
                                          fileText += line + "\n";
@@ -565,23 +571,29 @@ bosunControllers.controller('ConfigCtrl', ['$scope', '$http', '$location', '$rou
                 var configs = getConfigText();
 		$scope.saveResult = "Saving; Please Wait"
 
+                var promises = []
                 for (var key in configs) {
                         var fileText = configs[key];
 
-                        $http.post('/api/config/save', {
+                        promises.push($http.post('/api/config/save', {
                                 "Filename": key,
                                 "Config": fileText,
                                 "Diff": $scope.diff,
                                 "Message": $scope.message
-                        })
-                        .success((data: any) => {
-                                $scope.saveResult = "Config Saved; Reloading";
-                                $scope.runningHash = undefined;
-                        })
-                        .error((error) => {
-                                $scope.saveResult = error;
-                        })
+                        }));
                 }
+                $q.all(promises).then(function(success) {
+                        $http.post('/api/reload', {"Reload": true})
+                                .success((data: any) => {
+                                        $scope.saveResult = "Config Saved; Reloading";
+                                        $scope.runningHash = undefined;
+                                })
+                                .error((error) => {
+                                        $scope.saveResult = error;
+                                })
+                }, function(error) {
+                        $scope.saveResults = error.data
+                });
 	}
 
 	$scope.saveClass = () => {

@@ -42,10 +42,6 @@ func (c *Conf) SaveRawText(filename, rawConfig, diff, user, message string, args
 			return fmt.Errorf("failed to call save hook: %v. Restoring config: %v", err, restore)
 		}
 	}
-	err = c.reload()
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
