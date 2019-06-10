@@ -907,9 +907,9 @@ var UsernameInputController = (function () {
     function UsernameInputController(auth) {
         this.auth = auth;
     }
-    UsernameInputController.$inject = ['authService'];
     return UsernameInputController;
 }());
+UsernameInputController.$inject = ['authService'];
 bosunApp.component("usernameInput", {
     controller: UsernameInputController,
     controllerAs: "ct",
@@ -1360,23 +1360,53 @@ bosunControllers.controller('ConfigCtrl', ['$scope', '$http', '$location', '$rou
                 $scope.diff = "Failed to load diff: " + error;
             });
         };
+        function getConfigText() {
+            var rawText = $scope.config_text.split("\n");
+            var firstLine = rawText[0];
+            if (firstLine === "### DIRECTORY-BASED ###") {
+                var files = {};
+                var fileText = "";
+                for (var i = 1; i < rawText.length; i++) {
+                    var line = rawText[i];
+                    if (line.indexOf("### FROM") >= 0) {
+                        fileText = "";
+                    }
+                    else if (line.indexOf("### END ") >= 0) {
+                        var filename = line.substring(8);
+                        files[filename] = fileText.replace(/\n$/, "");
+                    }
+                    else {
+                        fileText += line + "\n";
+                    }
+                }
+                return files;
+            }
+            else {
+                return { "bosun.conf": $scope.config_text };
+            }
+        }
         $scope.saveConfig = function () {
             if (!$scope.saveEnabled) {
                 return;
             }
+            var configs = getConfigText();
             $scope.saveResult = "Saving; Please Wait";
-            $http.post('/api/config/save', {
-                "Config": $scope.config_text,
-                "Diff": $scope.diff,
-                "Message": $scope.message
-            })
-                .success(function (data) {
-                $scope.saveResult = "Config Saved; Reloading";
-                $scope.runningHash = undefined;
-            })
-                .error(function (error) {
-                $scope.saveResult = error;
-            });
+            for (var key in configs) {
+                var fileText = configs[key];
+                $http.post('/api/config/save', {
+                    "Filename": key,
+                    "Config": fileText,
+                    "Diff": $scope.diff,
+                    "Message": $scope.message
+                })
+                    .success(function (data) {
+                    $scope.saveResult = "Config Saved; Reloading";
+                    $scope.runningHash = undefined;
+                })
+                    .error(function (error) {
+                    $scope.saveResult = error;
+                });
+            }
         };
         $scope.saveClass = function () {
             if ($scope.saveResult == "Saving; Please Wait") {
@@ -1409,9 +1439,9 @@ var NotificationController = (function () {
             });
         };
     }
-    NotificationController.$inject = ['$http'];
     return NotificationController;
 }());
+NotificationController.$inject = ['$http'];
 bosunApp.component('notification', {
     bindings: {
         dat: "<"
@@ -1595,14 +1625,14 @@ bosunApp.directive('tsTab', function () {
                     return;
                 }
                 switch (evt.keyCode) {
-                    case 9:// tab
+                    case 9:
                         evt.preventDefault();
                         var v = ta.value;
                         var start = ta.selectionStart;
                         ta.value = v.substr(0, start) + "\t" + v.substr(start);
                         ta.selectionStart = ta.selectionEnd = start + 1;
                         return;
-                    case 13:// enter
+                    case 13:
                         if (ta.selectionStart != ta.selectionEnd) {
                             return;
                         }
@@ -3901,9 +3931,9 @@ var TokenListController = (function () {
         };
         this.load();
     }
-    TokenListController.$inject = ['$http', "authService"];
     return TokenListController;
 }());
+TokenListController.$inject = ['$http', "authService"];
 bosunApp.component('tokenList', {
     controller: TokenListController,
     controllerAs: "ct",
@@ -3948,9 +3978,9 @@ var NewTokenController = (function () {
     NewTokenController.prototype.encoded = function () {
         return encodeURIComponent(this.createdToken);
     };
-    NewTokenController.$inject = ['$http', 'authService'];
     return NewTokenController;
 }());
+NewTokenController.$inject = ['$http', 'authService'];
 bosunApp.component("newToken", {
     controller: NewTokenController,
     controllerAs: "ct",

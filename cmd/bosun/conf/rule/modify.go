@@ -17,7 +17,7 @@ import (
 // will not be saved. If the savehook fails to run or returns an error thaen the orginal config
 // will be restored and the reload will not take place.
 func (c *Conf) SaveRawText(filename, rawConfig, diff, user, message string, args ...string) error {
-	newConf, err := ParseRuleConf(c.Name, c.backends, c.sysVars, rawConfig)
+	newConf, err := ParseRuleConf(c.Name, c.backends, c.sysVars)
 	if err != nil {
 		return err
 	}

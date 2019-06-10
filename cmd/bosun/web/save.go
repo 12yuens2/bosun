@@ -34,7 +34,7 @@ func SaveConfig(t miniprofiler.Timer, w http.ResponseWriter, r *http.Request) (i
 	if err != nil {
 		return nil, err
 	}
-	err := schedule.RuleConf.SaveRawText(data.Filename, data.Config, data.Diff, data.User, data.Message, data.Other...)
+	err = schedule.RuleConf.SaveRawText(data.Filename, data.Config, data.Diff, data.User, data.Message, data.Other...)
 	if err != nil {
 		ioutil.WriteFile(data.Filename, []byte(backup), os.FileMode(int(0640)))
 		return nil, err
