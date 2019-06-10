@@ -95,7 +95,6 @@ func isValidConfDir(dirname string, t *testing.T) (bool, error) {
 	return err == nil, err
 }
 
-
 func testConfDir(dirname string, valid bool, t *testing.T) {
 	if got, err := isValidConfDir(dirname, t); valid != got {
 		t.Fatalf("%v: expected %v, got %v: %v", dirname, valid, got, err)

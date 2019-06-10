@@ -3,8 +3,8 @@ package rule
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"io/ioutil"
+	"os"
 
 	"bosun.org/cmd/bosun/conf"
 	"bosun.org/cmd/bosun/conf/rule/parse"

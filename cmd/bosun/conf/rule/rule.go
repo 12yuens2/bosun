@@ -25,8 +25,8 @@ import (
 )
 
 type Conf struct {
-	Vars conf.Vars
-	Name string // Config file name
+	Vars         conf.Vars
+	Name         string // Config file name
 	RuleFilePath string
 
 	Templates     map[string]*conf.Template
@@ -164,7 +164,6 @@ func ParseDirectory(dirname string, backends conf.EnabledBackends, sysVars map[s
 	c, err := NewConf(dirname, backends, sysVars, configText)
 	return c, err
 }
-
 
 func ParseFile(fname string, backends conf.EnabledBackends, sysVars map[string]string) (*Conf, error) {
 	f, err := ioutil.ReadFile(fname)

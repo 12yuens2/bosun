@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"path/filepath"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"bosun.org/cmd/bosun/conf"
